@@ -8,6 +8,8 @@ from streaming_form_data.targets import FileTarget, ValueTarget
 from urllib.parse import unquote
 from starlette.requests import ClientDisconnect
 
+from app.cloud.cloud import Cloud
+
 
 MAX_BODY_SIZE = 1024
 MAX_FILE_SIZE = 1024
@@ -35,8 +37,9 @@ class MaxBodySizeValidator():
 
 
 
-async def upload_file_from_request(request: Request):
+async def upload_file_from_request(request: Request, cloud_config: dict):
     body_val = MaxBodySizeValidator(max_size=MAX_BODY_SIZE)
+    cloud = Cloud(cloud_config)
 
     filename = request.headers.get('filename')
 
@@ -56,6 +59,7 @@ async def upload_file_from_request(request: Request):
         async for chunk in request.stream():
             body_val(chunk)
             parser.data_received(chunk)
+            await cloud.uplod_file_by_chunks(chunk)
     except ClientDisconnect:
         print("Client disconnect")
     except MaxBodySizeException as exp:
