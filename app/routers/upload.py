@@ -1,4 +1,5 @@
 from pathlib import Path
+import uuid
 
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import HTMLResponse
@@ -36,7 +37,6 @@ class MaxBodySizeValidator():
             raise MaxBodySizeException(self.body_len, "The file's size is over the limit")
 
 
-
 async def upload_file_from_request(request: Request, cloud_config: dict):
     body_val = MaxBodySizeValidator(max_size=MAX_BODY_SIZE)
     cloud = Cloud(cloud_config)
@@ -47,9 +47,8 @@ async def upload_file_from_request(request: Request, cloud_config: dict):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The header field for filename is missing")
     
     filename = unquote(filename)
-    #TODO: generate uuid
-    uuid = filename
-    file_path = Path(STORAGE_PATH) / uuid
+    uuid_ = str(uuid.uuid1())
+    file_path = Path(STORAGE_PATH) / uuid_
     parser = StreamingFormDataParser(headers=request.headers)
     file_ = FileTarget(file_path, validator=MaxSizeValidator(MAX_FILE_SIZE))
     parser.register('file', file_)
@@ -59,7 +58,7 @@ async def upload_file_from_request(request: Request, cloud_config: dict):
         async for chunk in request.stream():
             body_val(chunk)
             parser.data_received(chunk)
-            await cloud.uplod_file_by_chunks(chunk)
+            await cloud.uplod_file_by_chunks(chunk, uuid_)
     except ClientDisconnect:
         print("Client disconnect")
     except MaxBodySizeException as exp:
