@@ -1,0 +1,8 @@
+fastapi
+streaming_form_data
+urllib3
+uvicorn
+asyncio
+botocore
+boto3
+Pyaml
