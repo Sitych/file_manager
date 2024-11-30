@@ -10,14 +10,10 @@ from urllib.parse import unquote
 from starlette.requests import ClientDisconnect
 
 from app.cloud.cloud import Cloud
+from app.config import Config
 
 
-MAX_BODY_SIZE = 1024
-MAX_FILE_SIZE = 1024
-STORAGE_PATH = "/Users/19223700/data/storage_file_manager"
-
-
-router = APIRouter(prefix="/upload")
+router = APIRouter()
 
 
 class MaxBodySizeException(Exception):
@@ -39,9 +35,9 @@ class MaxBodySizeValidator:
             )
 
 
-async def upload_file_from_request(request: Request, cloud_config: dict):
-    body_val = MaxBodySizeValidator(max_size=MAX_BODY_SIZE)
-    cloud = Cloud(cloud_config)
+async def upload_file_from_request(request: Request, config: Config):
+    body_val = MaxBodySizeValidator(max_size=config.max_body_size)
+    # cloud = Cloud(cloud_config)
 
     filename = request.headers.get("filename")
 
@@ -53,9 +49,9 @@ async def upload_file_from_request(request: Request, cloud_config: dict):
 
     filename = unquote(filename)
     uuid_ = str(uuid.uuid1())
-    file_path = Path(STORAGE_PATH) / uuid_
+    file_path = Path(config.storage_dir) / uuid_
     parser = StreamingFormDataParser(headers=request.headers)
-    file_ = FileTarget(file_path, validator=MaxSizeValidator(MAX_FILE_SIZE))
+    file_ = FileTarget(file_path, validator=MaxSizeValidator(config.max_file_size))
     parser.register("file", file_)
     parser.register("data", ValueTarget())
 
@@ -63,18 +59,18 @@ async def upload_file_from_request(request: Request, cloud_config: dict):
         async for chunk in request.stream():
             body_val(chunk)
             parser.data_received(chunk)
-            await cloud.uplod_file_by_chunks(chunk, uuid_)
+            # await cloud.uplod_file_by_chunks(chunk, uuid_)
     except ClientDisconnect:
         print("Client disconnect")
     except MaxBodySizeException as exp:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"The request's body size ({exp.body_len}) is more than the server limit ({MAX_BODY_SIZE})",
+            detail=f"The request's body size ({exp.body_len}) is more than the server limit ({config.max_body_size})",
         )
     except ValidationError:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"The file's size is more than server limit ({MAX_FILE_SIZE})",
+            detail=f"The file's size is more than server limit ({config.max_file_size})",
         )
     except Exception:
         raise HTTPException(
@@ -88,7 +84,8 @@ async def upload_file_from_request(request: Request, cloud_config: dict):
         )
 
 
-@router.post("/")
+@router.post("/upload")
 async def upload_file(request: Request):
-    await upload_file_from_request(request)
+    config = Config.upload_config()
+    await upload_file_from_request(request, config)
     return HTMLResponse("<h2>Dataset was uploaded</h2>", status_code=status.HTTP_200_OK)
