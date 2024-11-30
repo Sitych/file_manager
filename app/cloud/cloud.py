@@ -11,20 +11,22 @@ class Cloud:
         self.loop = loop
         self.client = self.get_s3_client(config)
         self.__config = config
-    
+
     @staticmethod
     def get_s3_client(config: dict):
         boto_config = {
-            'service_name': 's3',
-            'region_name': config.get('region', 'ru'),
-            'verify': False,
-            'aws_access_key_id': config['key'],
-            'aws_secret_access_key': config['secret'],
-            'endpoint_url': config['endpoint'],
+            "service_name": "s3",
+            "region_name": config.get("region", "ru"),
+            "verify": False,
+            "aws_access_key_id": config["key"],
+            "aws_secret_access_key": config["secret"],
+            "endpoint_url": config["endpoint"],
         }
         s3obj = boto3.client(**boto_config)
         return s3obj
-    
+
     async def uplod_file_by_chunks(self, chunk: bytes, filename: str):
         async_upload_fileobj = async_wrap(self.client.upload_fileobj)
-        await async_upload_fileobj(chunk, self.__config['bucket'], filename, loop=self.loop)
+        await async_upload_fileobj(
+            chunk, self.__config["bucket"], filename, loop=self.loop
+        )
