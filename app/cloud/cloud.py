@@ -25,6 +25,6 @@ class Cloud:
         s3obj = boto3.client(**boto_config)
         return s3obj
     
-    async def uplod_file_by_chunks(self, chunk: bytes):
+    async def uplod_file_by_chunks(self, chunk: bytes, filename: str):
         async_upload_fileobj = async_wrap(self.client.upload_fileobj)
-        await async_upload_fileobj(chunk, self.__config['bucket'], self.__config['secret'], loop=self.loop)
+        await async_upload_fileobj(chunk, self.__config['bucket'], filename, loop=self.loop)
