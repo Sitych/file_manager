@@ -11,28 +11,10 @@ from starlette.requests import ClientDisconnect
 
 from app.cloud.cloud import Cloud
 from app.config import Config
+from app.lib.utils import MaxBodySizeException, MaxBodySizeValidator
 
 
 router = APIRouter()
-
-
-class MaxBodySizeException(Exception):
-    def __init__(self, body_len: str, *args):
-        super().__init__(*args)
-        self.body_len = body_len
-
-
-class MaxBodySizeValidator:
-    def __init__(self, max_size: int):
-        self.max_size = max_size
-        self.body_len = 0
-
-    def __call__(self, chunk: bytes):
-        self.body_len += len(chunk)
-        if self.body_len >= self.max_size:
-            raise MaxBodySizeException(
-                self.body_len, "The file's size is over the limit"
-            )
 
 
 async def upload_file_from_request(request: Request, config: Config):
@@ -82,10 +64,11 @@ async def upload_file_from_request(request: Request, config: Config):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="File is missing"
         )
+    return (uuid_, body_val.body_len)
 
 
 @router.post("/upload")
 async def upload_file(request: Request):
     config = Config.upload_config()
-    await upload_file_from_request(request, config)
+    uuid_, body_len = await upload_file_from_request(request, config)
     return HTMLResponse("<h2>Dataset was uploaded</h2>", status_code=status.HTTP_200_OK)

@@ -6,3 +6,4 @@ asyncio
 botocore
 boto3
 Pyaml
+SQLAlchemy
