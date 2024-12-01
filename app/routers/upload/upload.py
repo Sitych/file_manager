@@ -1,8 +1,8 @@
 from pathlib import Path
 import uuid
 
-from fastapi import APIRouter, Request, HTTPException, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, HTTPException, status, Depends, Header
+from fastapi.responses import JSONResponse
 from streaming_form_data.validators import MaxSizeValidator, ValidationError
 from streaming_form_data.parser import StreamingFormDataParser
 from streaming_form_data.targets import FileTarget, ValueTarget
@@ -11,7 +11,8 @@ from starlette.requests import ClientDisconnect
 
 from app.cloud.cloud import Cloud
 from app.config import Config
-from app.lib.utils import MaxBodySizeException, MaxBodySizeValidator
+from app.lib.utils import MaxBodySizeException, MaxBodySizeValidator, parse_content_type
+from app.routers.upload.dependences import filename_, fileformat
 
 
 router = APIRouter()
@@ -21,15 +22,6 @@ async def upload_file_from_request(request: Request, config: Config):
     body_val = MaxBodySizeValidator(max_size=config.max_body_size)
     # cloud = Cloud(cloud_config)
 
-    filename = request.headers.get("filename")
-
-    if filename is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The header field for filename is missing",
-        )
-
-    filename = unquote(filename)
     uuid_ = str(uuid.uuid1())
     file_path = Path(config.storage_dir) / uuid_
     parser = StreamingFormDataParser(headers=request.headers)
@@ -67,8 +59,16 @@ async def upload_file_from_request(request: Request, config: Config):
     return (uuid_, body_val.body_len)
 
 
-@router.post("/upload")
-async def upload_file(request: Request):
+@router.post("/upload", dependencies=[Depends(filename_), Depends(fileformat)])
+async def upload_file(
+    request: Request,
+    filename: str = Header(...),
+    content_type: str = Header(...),
+):
     config = Config.upload_config()
     uuid_, body_len = await upload_file_from_request(request, config)
-    return HTMLResponse("<h2>Dataset was uploaded</h2>", status_code=status.HTTP_200_OK)
+    filename = unquote(filename)
+    extension = Path(filename).suffix
+    file_format = parse_content_type(content_type)
+    file_data = {}
+    return JSONResponse({}, status_code=status.HTTP_200_OK)
