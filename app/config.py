@@ -19,7 +19,7 @@ class Config:
     storage_dir: str
     log_path: str
     env_path: str
-    db_config_path: str
+    db_url: str
     workers: int
     max_file_size: int
     aws_access_key_id: str
@@ -51,7 +51,7 @@ class Config:
             aws_access_key_id=config['aws_access_key_id'],
             aws_secret_access_key=config['aws_secret_access_key'],
             endpoint_url=config['endpoint_url'],
-            db_config_path=os.environ[CONFIG_ENV_NAME],
+            db_url=config['db_url'],
             workers=config.get('workers', 1),
             max_file_size=max_file_size,
             max_body_size=max_file_size + 1024
@@ -64,7 +64,7 @@ class Config:
 
     @classmethod
     def validate(cls, config: dict):
-        for param in ['port', 'storage_dir', 'log_path', 'env_path', 'aws_access_key_id', 'aws_secret_access_key', 'endpoint_url']:
+        for param in ['port', 'storage_dir', 'log_path', 'env_path', 'aws_access_key_id', 'aws_secret_access_key', 'endpoint_url', 'db_url']:
             cls.validate_one_param(param, config)
         if 'max_file_size' in config and not isinstance(config['max_file_size'], int):
             raise ValueError("The max_file_size's type should be int")

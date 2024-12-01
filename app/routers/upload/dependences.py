@@ -1,6 +1,4 @@
-from typing import Optional
-
-from fastapi import Header, HTTPException, status, Request
+from fastapi import HTTPException, status, Request
 
 
 def check_field(field: str):

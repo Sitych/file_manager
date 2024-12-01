@@ -8,11 +8,13 @@ from streaming_form_data.parser import StreamingFormDataParser
 from streaming_form_data.targets import FileTarget, ValueTarget
 from urllib.parse import unquote
 from starlette.requests import ClientDisconnect
+from sqlalchemy import insert
 
 from app.cloud.cloud import Cloud
 from app.config import Config
 from app.lib.utils import MaxBodySizeException, MaxBodySizeValidator, parse_content_type
-from app.routers.upload.dependences import filename_, fileformat
+from .dependences import filename_, fileformat
+from .db import get_session, Session, insert_files_metadata
 
 
 router = APIRouter()
@@ -64,11 +66,19 @@ async def upload_file(
     request: Request,
     filename: str = Header(...),
     content_type: str = Header(...),
+    session: Session = Depends(get_session),
 ):
     config = Config.upload_config()
     uuid_, body_len = await upload_file_from_request(request, config)
     filename = unquote(filename)
     extension = Path(filename).suffix
     file_format = parse_content_type(content_type)
-    file_data = {}
-    return JSONResponse({}, status_code=status.HTTP_200_OK)
+    meta_data = {
+        'id': uuid_,
+        'size': body_len,
+        'extension': extension,
+        'name': filename,
+        'enctype': file_format
+    }
+    insert_files_metadata(session, [meta_data])
+    return JSONResponse({filename: uuid_}, status_code=status.HTTP_200_OK)
