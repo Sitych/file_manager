@@ -1,0 +1,10 @@
+port: 10000
+storage_dir: '/Users/19223700/data/storage_file_manager'
+log_path: ''
+env_path: ''
+workers: 2
+max_file_size: 4
+aws_access_key_id: ''
+aws_secret_access_key: ''
+endpoint_url: ''
+db_url: 'postgresql://19223700@localhost/file_manager'
