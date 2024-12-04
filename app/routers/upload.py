@@ -13,8 +13,8 @@ from sqlalchemy import insert
 from app.cloud.cloud import Cloud
 from app.config import Config
 from app.lib.utils import MaxBodySizeException, MaxBodySizeValidator, parse_content_type
-from .dependences import filename_, fileformat
-from .db import get_session, Session, insert_files_metadata
+from app.dependences import filename_, fileformat
+from app.db import get_session, Session, insert_files_metadata
 
 
 router = APIRouter()

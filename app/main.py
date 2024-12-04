@@ -3,7 +3,7 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.routers.upload import upload
+from app.routers import upload
 from app.config import Config
 
 app = FastAPI()
