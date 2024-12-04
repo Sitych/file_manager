@@ -1,9 +1,9 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, insert, select
 
-from models import UploadingFile
+from app.models import UploadingFile
 from app.config import Config
 
 
@@ -20,8 +20,11 @@ def insert_files_metadata(session: Session, data: List[dict]):
     session.commit()
 
 
-def select_file(uuid: str, session: Session) -> UploadingFile:
+def select_file(uuid: str, session: Session) -> Optional[UploadingFile]:
     data = session.execute(select(UploadingFile).filter_by(id=uuid))
+    firest_elem = data.first()
+    if firest_elem is None:
+        return None
+    item: UploadingFile = firest_elem[0]
     session.commit()
-    item: UploadingFile = data.first()[0]
     return item
