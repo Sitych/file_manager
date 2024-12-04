@@ -12,3 +12,6 @@ class UploadingFile(Base):
     extension = Column(String)
     name = Column(String, nullable=True)
     enctype = Column(String, nullable=True)
+
+    def __repr__(self):
+        return f"UploadingFile(id={self.id}, size={self.size}, extension={self.extension}, name={self.name}, self.enctype={self.enctype})"

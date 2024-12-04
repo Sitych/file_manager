@@ -25,18 +25,18 @@ class MaxBodySizeValidator:
 
 
 def get_ip():
-    if platform == 'darwin':
-        host_ip = '127.0.0.1'
+    if platform == "darwin":
+        host_ip = "127.0.0.1"
     else:
         try:
             host_ip = gethostbyname(gethostname())
         except gaierror:
-            host_ip = '0.0.0.0'
+            host_ip = "0.0.0.0"
     return host_ip
 
 
 def parse_content_type(content_type: str) -> str:
     email = Message()
-    email['content-type'] = content_type
+    email["content-type"] = content_type
     params = email.get_params()
     return params[0][0]

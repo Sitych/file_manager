@@ -74,11 +74,11 @@ async def upload_file(
     extension = Path(filename).suffix
     file_format = parse_content_type(content_type)
     meta_data = {
-        'id': uuid_,
-        'size': body_len,
-        'extension': extension,
-        'name': filename,
-        'enctype': file_format
+        "id": uuid_,
+        "size": body_len,
+        "extension": extension,
+        "name": filename,
+        "enctype": file_format,
     }
     insert_files_metadata(session, [meta_data])
     return JSONResponse({filename: uuid_}, status_code=status.HTTP_200_OK)
